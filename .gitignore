@@ -1,0 +1,16 @@
+# Node
+node_modules/
+dist/
+npm-debug.log
+.env
+.DS_Store
+
+# .NET / C#
+bin/
+obj/
+*.user
+*.suo
+*.userosprefs
+.vs/
+*.db
+*.sqlite
