@@ -14,3 +14,7 @@ const expedienteOdataFactory = ODataFetchFactory({
 export const autorizacionFetch = fetchFactory(webApi, "Autorizacion");
 export const autorizacionAceptarUsuarioFetch = fetchFactory(webApi, "Autorizacion/AceptarUsuario");
 export const acceptFetch = fetchFactory(webApi, "Autorizacion/Accept");
+
+export const empresaGetAllFetch = fetchFactory(webApi, "Empresa/All");
+export const empresaAddFetch = fetchFactory(webApi, "Empresa/Add");
+export const empresaQuitarFetch = fetchFactory(webApi, "Empresa/Quitar");

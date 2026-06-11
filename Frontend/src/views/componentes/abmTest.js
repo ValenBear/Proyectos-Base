@@ -2,19 +2,20 @@ import { html, LitElement, css } from "lit";
 import { store } from "../../redux/store";
 import { connect } from "@brunomon/helpers";
 import { gridLayout } from "@brunomon/template-lit/src/views/css/gridLayout";
-import { fetchApi } from "../../redux/api/slice";
+import { getEmpresas, addEmpresa, deleteEmpresa } from "../../redux/empresas/slice";
 
 import "../ui/ui-button.js";
 import "../ui/ui-input.js";
 import "../ui/ui-badge.js";
 
-export class abmTest extends connect(store, "api.loading")(LitElement) {
+export class abmTest extends connect(store, "empresas.entities", "empresas.loading")(LitElement) {
     constructor() {
         super();
         this.__storeUnsubscribe = function() {};
         this.empresas = [];
         this.cuit = "";
         this.razonSocial = "";
+        this.loading = false;
     }
 
     static get properties() {
@@ -52,7 +53,7 @@ export class abmTest extends connect(store, "api.loading")(LitElement) {
             }
             .form-row {
                 display: grid;
-                grid-template-columns: 1fr 2fr auto;
+                grid-template-columns: 1fr 2fr auto auto;
                 gap: 1rem;
                 align-items: end;
                 margin-bottom: 1.5rem;
@@ -77,7 +78,7 @@ export class abmTest extends connect(store, "api.loading")(LitElement) {
     render() {
         return html`
             <div class="card">
-                <h2>ABM de Empresas (Prueba Backend)</h2>
+                <h2>ABM de Empresas (Prueba Backend con Thunks y fetchFactory)</h2>
                 
                 <div class="form-row">
                     <ui-input 
@@ -135,66 +136,41 @@ export class abmTest extends connect(store, "api.loading")(LitElement) {
         `;
     }
 
-    async loadEmpresas() {
-        // En un caso real usamos window.fetch o axios adentro del Thunk.
-        const res = await store.dispatch(fetchApi({
-            fetchFunction: async () => {
-                const req = await fetch("/v1/Empresa/All");
-                if(!req.ok) throw new Error("Error fetching empresas");
-                return req.json();
-            },
-            params: {}
-        }));
-        if(!res.error) {
-            this.empresas = res.payload || [];
-        }
+    loadEmpresas() {
+        store.dispatch(getEmpresas());
     }
 
     async addEmpresa() {
         if(!this.cuit || !this.razonSocial) return alert("Completá los campos");
 
-        const res = await store.dispatch(fetchApi({
-            fetchFunction: async () => {
-                const req = await fetch("/v1/Empresa/Add", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        CUIT: parseInt(this.cuit), 
-                        RazonSocial: this.razonSocial, 
-                        EsCooperativa: false 
-                    })
-                });
-                if(!req.ok) throw new Error("Error guardando empresa");
-                return req.text(); // Devuelve GUID
-            },
-            params: {}
-        }));
+        const body = { 
+            CUIT: parseInt(this.cuit), 
+            RazonSocial: this.razonSocial, 
+            EsCooperativa: false 
+        };
 
-        if(!res.error) {
+        const resultAction = await store.dispatch(addEmpresa(body));
+        if (addEmpresa.fulfilled.match(resultAction)) {
             this.cuit = "";
             this.razonSocial = "";
-            this.loadEmpresas();
+        } else {
+            alert("Error al guardar: " + resultAction.payload);
         }
     }
 
     async deleteEmpresa(id) {
-        const res = await store.dispatch(fetchApi({
-            fetchFunction: async () => {
-                const req = await fetch("/v1/Empresa/Quitar/" + id, { method: 'DELETE' });
-                if(!req.ok) throw new Error("Error eliminando empresa");
-                return req.text();
-            },
-            params: {}
-        }));
-
-        if(!res.error) {
-            this.loadEmpresas();
+        const resultAction = await store.dispatch(deleteEmpresa(id));
+        if (deleteEmpresa.rejected.match(resultAction)) {
+            alert("Error al eliminar: " + resultAction.payload);
         }
     }
 
     stateChanged(state, name) {
-        if(name === "api.loading") {
-            this.loading = state.api.loading > 0;
+        if(name === "empresas.loading") {
+            this.loading = state.empresas.loading;
+        }
+        if(name === "empresas.entities") {
+            this.empresas = state.empresas.entities || [];
         }
     }
 }

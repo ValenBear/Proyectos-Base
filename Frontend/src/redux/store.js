@@ -7,6 +7,7 @@ import apiReducer from "./api/slice";
 import routingReducer from "./routing/slice";
 import miPerfilReducer from "./miPerfil/slice";
 import screensReducer from "./screens/slice";
+import empresasReducer from "./empresas/slice";
 
 export const store = configureStore({
     reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
         screen: screensReducer,
         routing: routingReducer,
         miPerfil: miPerfilReducer,
+        empresas: empresasReducer,
     },
     middleware: (getDefaultMiddleware) => {
         const middlewares = getDefaultMiddleware({
